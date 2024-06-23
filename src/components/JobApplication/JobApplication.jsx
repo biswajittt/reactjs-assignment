@@ -7,20 +7,59 @@ function JobApplication() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [position, setPosition] = useState("");
-  const [experience, setExperience] = useState(0);
+  const [relevantExperience, setRelevantExperience] = useState("");
   const [portfolioURL, setPortfolioURL] = useState("");
   const [managementExp, setManagementExp] = useState("");
-  const [additionalSkills, setAdditionalSkills] = useState("");
+  const [additionalSkills, setAdditionalSkills] = useState({
+    languages: [],
+    response: [],
+  });
+  const [interviewDateTime, setInterviewDateTime] = useState("");
+  const [interviewDate, setInterviewDate] = useState("");
   const [interviewTime, setInterviewTime] = useState("");
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [showCard, setShowcard] = useState(false);
-  const [userData, setUserData] = useState({});
+  // const [userData, setUserData] = useState({});
 
+  // validate full name
+  const validateFullName = (username) => {
+    let namePattern = /^[a-zA-Z\s-]+$/;
+
+    if (!username || !namePattern.test(username)) {
+      return false;
+    }
+    return true;
+  };
   // handle select position
   const positions = ["Developer", "Designer", "Manager"];
   const handlePositionSelect = (e) => {
     setPosition(e.target.value);
+  };
+
+  // handle checkbox
+  const handleAdditionalSkills = (e) => {
+    // Destructuring
+    const { value, checked } = e.target;
+    const { languages } = additionalSkills;
+
+    // console.log(`${value} is ${checked}`);
+
+    // Case 1 : The user checks the box
+    if (checked) {
+      setAdditionalSkills({
+        languages: [...languages, value],
+        response: [...languages, value],
+      });
+    }
+
+    // Case 2  : The user unchecks the box
+    else {
+      setAdditionalSkills({
+        languages: languages.filter((e) => e !== value),
+        response: languages.filter((e) => e !== value),
+      });
+    }
   };
 
   // check portfolio link validation
@@ -33,12 +72,29 @@ function JobApplication() {
       setErrorMsg("Invalid URL");
     }
   };
+  //handle close card
+  const handleCloseCard = () => {
+    setShowcard(false);
+    setName("");
+    setEmail("");
+    setPhone("");
+    setPosition("");
+    setRelevantExperience("");
+    setPortfolioURL("");
+    setManagementExp("");
+    setAdditionalSkills("");
+    setInterviewDateTime("");
+    setInterviewDate("");
+    setInterviewTime("");
+  };
   //form validation
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (name.length < 1) {
+
+    // console.log(additionalSkills.languages);
+    if (!validateFullName(name)) {
       setError(true);
-      setErrorMsg("Enter Your Name Correctly");
+      setErrorMsg("Enter Your Full Name Correctly");
       return;
     }
     if (email.length < 1) {
@@ -48,7 +104,7 @@ function JobApplication() {
     }
     if (phone.length != 10) {
       setError(true);
-      setErrorMsg("Enter Your Phone Number Correctly");
+      setErrorMsg("Enter Your Phone Number Correctly. Ex: 7543902615");
       return;
     }
     if (
@@ -61,7 +117,11 @@ function JobApplication() {
       setErrorMsg("Select Position Correctly");
       return;
     }
-    if (experience > 0) {
+    if (
+      !isNaN(relevantExperience) &&
+      relevantExperience.length == 0 &&
+      relevantExperience == "0"
+    ) {
       setError(true);
       setErrorMsg("Experince should be greater than 0");
       return;
@@ -71,24 +131,44 @@ function JobApplication() {
       setErrorMsg("Enter Your Portfolio URL Correctly");
       return;
     }
-    if (position == "Manager" && managementExp > 0) {
+    if (position == "Manager" && managementExp.length < 5) {
       setError(true);
       setErrorMsg("Enter Your Management Experience Correctly");
       return;
     }
-    console.log(
-      "error",
-      errorMsg,
-      name,
-      email,
-      phone,
-      position,
-      experience,
-      portfolioURL,
-      managementExp,
-      additionalSkills,
-      interviewTime
-    );
+    if (
+      additionalSkills.languages[0] != "JavaScript" &&
+      additionalSkills.languages[1] != "CSS" &&
+      additionalSkills.languages[2] != "Python"
+    ) {
+      setError(true);
+      setErrorMsg("Choose Aditional Skills Correctly");
+      return;
+    }
+    if (interviewDateTime.length == 0) {
+      setError(true);
+      setErrorMsg("Select Preferred Interview Time Correctly");
+      return;
+    } else {
+      const splittedInterviwDateTime = interviewDateTime.split(/[T]/);
+      setInterviewDate(splittedInterviwDateTime[0]);
+
+      // \\convert time
+      let time = splittedInterviwDateTime[1];
+      var ts = time;
+      var H = +ts.substr(0, 2);
+      var h = H % 12 || 12;
+      h = h < 10 ? "0" + h : h;
+      var ampm = H < 12 ? " AM" : " PM";
+      ts = h + ts.substr(2, 3) + ampm;
+      setInterviewTime(ts);
+      console.log(ts);
+    }
+
+    // check error, show card if no error
+    if (!error) {
+      setShowcard(true);
+    }
   };
 
   useEffect(() => {
@@ -110,9 +190,9 @@ function JobApplication() {
           height="24"
           fill="none"
           viewBox="0 0 24 24"
-          // onClick={() => {
-          //   closeDataCard();
-          // }}
+          onClick={() => {
+            handleCloseCard();
+          }}
         >
           <path
             stroke="currentColor"
@@ -124,24 +204,70 @@ function JobApplication() {
         </svg>
 
         <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white text-center">
-          Event User Registration Data
+          Job Application Data
         </h5>
         <div className="block">
           <span className="text-white inline-flex">
-            Name: <span className="ml-2 font-bold">frf</span>
+            Name: <span className="ml-2 font-bold">{name}</span>
           </span>
           <hr className="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700" />
           <span className="text-white inline-flex">
-            Email: <span className="ml-2 font-bold">frf</span>
+            Email: <span className="ml-2 font-bold">{email}</span>
           </span>
           <hr className="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700" />
           <span className="text-white inline-flex">
-            Age: <span className="ml-2 font-bold">frf</span>
+            Phone Number: <span className="ml-2 font-bold">{phone}</span>
           </span>
           <hr className="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700" />
           <span className="text-white inline-flex">
-            Are you attending with a guest?:
-            <span className="ml-2 font-bold">rf</span>
+            Position: <span className="ml-2 font-bold">{position}</span>
+          </span>
+
+          {(position == "Developer" || position == "Designer") && (
+            <>
+              <hr className="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700" />
+              <span className="text-white inline-flex">
+                Relevant Experience:
+                <span className="ml-2 font-bold">{relevantExperience}</span>
+              </span>
+            </>
+          )}
+
+          {position == "Designer" && (
+            <>
+              <hr className="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700" />
+              <span className="text-white inline-flex">
+                Portfolio URL:{" "}
+                <span className="ml-2 font-bold">{portfolioURL}</span>
+              </span>
+            </>
+          )}
+
+          {position == "Manager" && (
+            <>
+              <hr className="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700" />
+              <span className="text-white inline-flex">
+                Management Experience:{" "}
+                <span className="ml-2 font-bold">{managementExp}</span>
+              </span>
+            </>
+          )}
+          <hr className="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700" />
+          <span className="text-white inline-flex">
+            Additional Skills:
+            <span className="ml-2 font-bold">
+              {additionalSkills.languages.map((value, index) => {
+                return <span key={index}>{value + " "}</span>;
+              })}
+            </span>
+          </span>
+
+          <hr className="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700" />
+          <span className="text-white inline-flex">
+            Preferred Interview Time:
+            <span className="ml-2 font-bold">
+              {interviewDate},{interviewTime}
+            </span>
           </span>
         </div>
       </div>
@@ -248,9 +374,9 @@ function JobApplication() {
                 id="experience"
                 min="0"
                 className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light"
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
                 placeholder="Number of Years"
+                value={relevantExperience}
+                onChange={(e) => setRelevantExperience(e.target.value)}
                 required
               />
             </div>
@@ -285,9 +411,8 @@ function JobApplication() {
                 Management Experience
               </label>
               <input
-                type="num"
+                type="text"
                 id="management"
-                min="0"
                 className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light"
                 value={managementExp}
                 onChange={(e) => setManagementExp(e.target.value)}
@@ -299,62 +424,65 @@ function JobApplication() {
 
           <div className="mb-5">
             <label
-              htmlFor="repeat-password"
+              htmlFor="additional-skills"
               className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
             >
               Additional Skills
             </label>
             <div className="flex flex-wrap mb-5">
-              <div className="flex items-center me-4">
-                <input
-                  id="inline-radio"
-                  type="radio"
-                  value=""
-                  onChange={() => setAdditionalSkills("javascript")}
-                  name="inline-radio-group"
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                  checked
-                />
-                <label
-                  htmlFor="inline-radio"
-                  className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                >
-                  JavaScript
-                </label>
-              </div>
-              <div className="flex items-center me-4">
-                <input
-                  id="inline-2-radio"
-                  type="radio"
-                  value=""
-                  onChange={() => setAdditionalSkills("css")}
-                  name="inline-radio-group"
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                />
-                <label
-                  htmlFor="inline-2-radio"
-                  className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                >
-                  CSS
-                </label>
-              </div>
-
-              <div className="flex items-center me-4">
-                <input
-                  id="inline-2-radio"
-                  type="radio"
-                  value=""
-                  onChange={() => setAdditionalSkills("python")}
-                  name="inline-radio-group"
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                />
-                <label
-                  htmlFor="inline-2-radio"
-                  className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                >
-                  Python
-                </label>
-              </div>
+              <ul className="items-center w-full text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg sm:flex dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <li className="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-600">
+                  <div className="flex items-center ps-3">
+                    <input
+                      id="vue-checkbox-list"
+                      type="checkbox"
+                      value="JavaScript"
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                      onChange={handleAdditionalSkills}
+                    />
+                    <label
+                      htmlFor="vue-checkbox-list"
+                      className="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                    >
+                      JavaScript
+                    </label>
+                  </div>
+                </li>
+                <li className="w-full border-b border-gray-200 sm:border-b-0 sm:border-r dark:border-gray-600">
+                  <div className="flex items-center ps-3">
+                    <input
+                      id="react-checkbox-list"
+                      type="checkbox"
+                      value="CSS"
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                      onChange={handleAdditionalSkills}
+                    />
+                    <label
+                      htmlFor="react-checkbox-list"
+                      className="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                    >
+                      CSS
+                    </label>
+                  </div>
+                </li>
+                <li className="w-full dark:border-gray-600">
+                  <div className="flex items-center ps-3">
+                    <input
+                      id="laravel-checkbox-list"
+                      type="checkbox"
+                      value="Python"
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
+                      onChange={handleAdditionalSkills}
+                    />
+                    <label
+                      htmlFor="laravel-checkbox-list"
+                      className="w-full py-3 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                    >
+                      Python
+                    </label>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -380,8 +508,8 @@ function JobApplication() {
               </div>
               <input
                 type="datetime-local"
-                value={interviewTime}
-                onChange={(e) => setInterviewTime(e.target.value)}
+                value={interviewDateTime}
+                onChange={(e) => setInterviewDateTime(e.target.value)}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="Select date"
                 required
