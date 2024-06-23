@@ -1,7 +1,7 @@
 import React from "react";
 
 function Survey() {
-  return <div>Survey</div>;
+  return <div style={{ color: "white" }}>Working</div>;
 }
 
 export default Survey;
